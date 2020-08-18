@@ -1,0 +1,51 @@
+[global]
+	access based share enum = yes
+	realm = {{ realm }}
+	workgroup = {{ workgroup }}
+        security = ads
+        kerberos method = system keytab
+        template homedir = {{ gfs2_mount_point }}/home/%U
+
+	clustering = yes
+	ctdbd socket = /tmp/ctdb.socket
+
+	log file = /var/log/samba/%m.log
+	log level = 1
+
+	idmap config * : backend = tdb
+	idmap config * : range = 10000-199999
+	idmap config {{ workgroup }}:backend = sss
+	idmap config {{ workgroup }}:range = 200000-2147483647
+
+	winbind enum users = yes
+	winbind enum groups = yes
+
+	winbind refresh tickets = yes
+	vfs objects = acl-xattr
+	map acl inherit = yes
+	store dos attributes = yes
+
+	dedicated keytab file = /etc/krb5.keytab
+
+	winbind use default domain = yes
+
+	load printers = no
+
+	machine password timeout = 0
+
+[homes]
+	comment = Home Directories
+	valid users = %S, %D%w%S
+        browseable = No
+        read only = No
+        inherit acls = Yes
+
+{% for i in samba_shares %}
+[{{ i.name }}]
+	comment = {{ i.comment }}
+        path = {{ gfs2_mount_point }}{{ i.path }}	
+  	read only = {{ i.read_only }}
+  	valid users = {{ i.valid_users }}
+  	inherit acls = {{ i.inherit_acls }}
+
+{% endfor %}

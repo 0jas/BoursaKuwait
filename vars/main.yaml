@@ -1,0 +1,85 @@
+---
+ntp_servers:
+  - 'server 0.au.pool.ntp.org iburst'
+  - 'server 1.au.pool.ntp.org iburst'
+  - 'server 2.au.pool.ntp.org iburst'
+  - 'server 3.au.pool.ntp.org iburst'
+
+ntp_servers_exclude: 'centos'
+
+hosts_file:
+  - '192.168.1.95	iserver'
+  - '192.168.1.96	samba01'
+  - '192.168.1.97	samba02'
+
+packages:
+  - epel-release
+  - ctdb
+  - cifs-utils
+  - samba
+  - samba-common
+  - samba-winbind
+  - krb5-workstation
+  - realmd
+  - oddjob
+  - oddjob-mkhomedir
+  - sssd
+  - adcli
+  - samba-winbind-clients
+  - chrony
+  - pcs
+  - pacemaker
+  - fence-agents-all
+  - dlm
+  - lvm2-cluster
+  - gfs2-utils
+  - targetcli
+  - tree
+
+tokens_file: '/var/lib/pcsd/tokens'
+corosync_conf: '/etc/corosync/corosync.conf'
+
+disable_services:
+  - ctdb
+  - smb
+  - nmb
+  - winbind
+
+firewall_ports:
+  - high-availability
+  - ctdb
+  - samba
+
+cluster_user: 'hacluster'
+cluster_password: 'redhat'
+cluster_name: 'boursa_cluster'
+
+stonith_name: 'scsi-stonith-device'
+iscsi_shared_disk: '/dev/disk/by-id/wwn-0x60000000000000000e00000000010001'
+
+dlm_name: 'dlm'
+clvmd_name: 'clvmd'
+gfs2fs_name: 'gfs2fs'
+ctdb_name: ctdb
+samba_name: smba
+
+shared_volume: '/dev/disk/by-id/ata-VBOX_HARDDISK_VB19add5fe-5351e357'
+vg_name: 'vgclvm'
+lv_name: 'lvcluster'
+
+gfs2_mount_point: '/clusterfs'
+
+ctdb_directories:
+  - "/home"
+  - "/share"
+  - "/ctdb_lock"
+
+ctdb_public_addresses:
+  - "192.168.1.80/24 enp0s3"
+  - "192.168.1.81/24 enp0s3"
+
+
+ad_domain: 'boursakuwait.com.kw'
+ad_user: Administrator
+realm: 'BOURSAKUWAIT.COM.KW'
+workgroup: 'BOURSAKUWAIT'

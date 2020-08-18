@@ -1,0 +1,29 @@
+[sssd]
+services = nss, pam
+domains = shadowutils, {{ ad_domain }}
+config_file_version = 2
+
+[nss]
+
+[pam]
+
+[domain/shadowutils]
+id_provider = files
+
+auth_provider = proxy
+proxy_pam_target = sssd-shadowutils
+
+proxy_fast_alias = True
+
+[domain/{{ ad_domain }}]
+ad_domain = {{ ad_domain }}
+krb5_realm = {{ realm }}
+realmd_tags = manages-system joined-with-samba
+cache_credentials = True
+id_provider = ad
+krb5_store_password_if_offline = True
+default_shell = /bin/bash
+ldap_id_mapping = True
+use_fully_qualified_names = False
+fallback_homedir = {{ gfs2_mount_point }}/home/%u
+access_provider = ad

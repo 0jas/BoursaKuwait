@@ -1,0 +1,568 @@
+---
+- name: Create a samba CTDB cluster
+  hosts: samba_servers
+  vars_files: vars/main.yaml
+  vars:
+    my_list: ""
+  gather_facts: false
+
+  tasks:
+  - name: Install EPEL repo
+    yum:
+      name: epel-release
+      state: present
+
+  - name: Update all packages
+    yum:
+      name: '*'
+      state: latest
+    notify: require_restart
+
+  - name: Configure SELinux
+    selinux:
+      policy: targeted
+      state: permissive
+    notify:
+      - require_restart
+
+  - name: Install packages required for PCS Cluster
+    yum:
+      name: "{{ packages }}"
+      state: latest
+    register: result
+    tags:
+      - install_packages
+
+  - name: Display the result of install packages
+    debug:
+      var: result
+    tags:
+      - install_packages
+
+  - name: Disable and Stop Services
+    service:
+      name: "{{ item }}"
+      state: stopped
+      enabled: False
+    with_items: "{{ disable_services }}"
+
+  - name: Update hosts file
+    lineinfile:
+      line: "{{ item }}"
+      state: present
+      path: /etc/hosts
+    with_items: "{{ hosts_file }}"
+
+  - name: Remove unwanted/default NTP Servers
+    lineinfile:
+      path: /etc/chrony.conf
+      regexp: 'centos'
+      state: absent
+    notify:
+      - chrony_conf_updated
+
+  - name: Add required NTP servers
+    lineinfile:
+      path: /etc/chrony.conf
+      state: present
+      insertafter: '^# Please'
+      line: "{{ item }}"
+    with_items: "{{ ntp_servers }}"
+    notify:
+      - chrony_conf_updated
+
+  - name: Start and Enable Chrony service
+    service:
+      name: chronyd
+      enabled: True
+      state: started
+
+  - name: Open firewall ports
+    firewalld:
+      service: "{{ item }}"
+      permanent: Yes
+      immediate: Yes
+      state: enabled
+    with_items: "{{ firewall_ports }}"
+    tags:
+      - firewall
+
+  - name: Update passwd for hacluster user
+    user:
+      name: hacluster
+      password: "{{ 'redhat' | password_hash('sha512', 'boursasalt') }}"
+      state: present
+    notify: restart_pcs
+
+  - name: Start and Enable cluster services
+    service:
+      name: pcsd
+      state: started
+      enabled: True
+
+  - name: Create a string of host Names
+    set_fact:
+      my_list: "{{ my_list }}  {{ item }}"
+    with_items: "{{ ansible_play_batch }}"
+    tags:
+      - host_l
+    
+  - name: Auth cluster nodes
+    command: 'pcs cluster auth{{ my_list }} -u {{ cluster_user }} -p {{ cluster_password }}'
+    args:
+      creates: "{{ tokens_file }}"
+    run_once: True
+
+  - name: Setup PCS Cluster using Command
+    command: 'pcs cluster setup --wait_for_all=0 --name {{ cluster_name }} {{ my_list }} --force'
+    args:
+      creates: /etc/corosync/corosync.conf
+    run_once: True
+
+  - name: Start PCS Cluster services
+    service:
+      name: "{{ item }}"
+      state: started
+      enabled: True
+    loop:
+      - corosync
+      - pacemaker  
+
+  - name: Get STONITH state
+    command: 'pcs property show stonith-enabled'
+    register: result
+    tags: st_shw
+
+  - name: Show Result
+    debug:
+      msg: "STONITH is disabled"
+    run_once: True
+    when: result.stdout.find('false') != -1
+    tags: st_shw
+
+  - name: Show Result
+    debug:
+      msg: "STONITH is enabled"
+    run_once: True
+    when:  result.stdout.find('false') == -1
+    tags: st_shw
+
+#  - name: Disable STONITH
+#    command: 'pcs property set stonith-enabled=false'
+#    when: result.stdout.find('false') == -1
+#    tags: st_shw
+
+#################################################
+################### Create cLVM #################
+#################################################
+
+  - name: Enable Cluster Locking
+    command: 'lvmconf --enable-cluster'
+
+  - name: Stop lvmetad Service
+    service:
+      name: lvm2-lvmetad
+      state: stopped
+      enabled: False
+
+  - name: Set No Quorum Policy
+    command: 'pcs property set no-quorum-policy=freeze'
+    run_once: True
+
+  - name: Check STONITH presence
+    shell: "pcs stonith | grep {{ stonith_name }} | wc -l" 
+    run_once: True
+    register: result
+ 
+  - name: Print Result
+    debug:
+      var: result
+    run_once: True
+
+  - name: Create Fencing Agent
+    #command: "pcs stonith create {{ stonith_name }} fence_scsi devices=/dev/sdd pcmk_monitor_action=metadata pcmk_reboot_action=off pcmk_host_list='{{ my_list }}' meta provides=unfencing"
+    command: "pcs stonith create {{ stonith_name }} fence_scsi devices={{ iscsi_shared_disk }} pcmk_monitor_action=metadata pcmk_reboot_action=off pcmk_host_list='{{ my_list }}' meta provides=unfencing"
+    run_once: True
+    when: result.stdout == '0'
+
+  - name: Loop till STONITH is started
+    shell: "pcs stonith | grep {{ stonith_name }}"
+    #run_once: True
+    register: result
+    until: result.stdout.find('Started') != -1
+    retries: 10
+    delay: 10
+
+#  - name: Get PCS resources
+#    command: 'pcs resource'
+#    register: result 
+
+  - name: Check Controld
+    shell: "pcs resource | grep {{ dlm_name }} | wc -l"
+    run_once: True
+    register: result
+
+  - name: Create Controld resource
+    command: 'pcs resource create {{ dlm_name }} controld op monitor interval=30s on-fail=fence clone interleave=true ordered=true'
+    run_once: True
+    when: result.stdout == '0'
+#    when: result.stdout.find('mydlm-clone') == -1
+
+  - name: Loop till Controld is Satrted
+    shell: "pcs resource | grep -A 1 {{ dlm_name }} | grep -i started | wc -l"
+    register: result
+    until: result.stdout == '1'
+    retries: 10
+    delay: 10
+
+  - name: Chcek cLVMd
+    shell: "pcs resource | grep {{ clvmd_name }} | wc -l"
+    run_once: True
+    register: result
+
+  - name: Create cLVM resource
+    command: 'pcs resource create {{ clvmd_name }} clvm op monitor interval=30s on-fail=fence clone interleave=true ordered=true'
+    run_once: True
+    when: result.stdout == '0'
+#    when: result.stdout.find('myclvmd-clone') == -1
+
+  - name: Loop till cLVMd is Started
+    shell: "pcs resource | grep -A 1 {{ clvmd_name }} | grep -i started | wc -l"
+    register: result
+    until: result.stdout == '1'
+    retries: 10
+    delay: 10
+
+  - name: Get PCS Order Constraint
+    shell: "pcs constraint | grep -w 'start {{ dlm_name }}-clone then start {{ clvmd_name }}-clone' | wc -l"
+    register: result
+
+  - name: Add order constraint
+    command: 'pcs constraint order start {{ dlm_name }}-clone then {{ clvmd_name }}-clone'
+    run_once: True
+    when: result.stdout == '0'
+    #when: result.stdout.find('mydlm-clone then start myclvmd-clone') == -1
+
+  - name: Get PCS colocation Constraints
+    shell: "pcs constraint | grep -w '{{ clvmd_name }}-clone with {{ dlm_name }}-clone' | wc -l"
+    register: result
+  
+  - name: Add colocation constraint
+    command: 'pcs constraint colocation add {{ clvmd_name }}-clone with {{ dlm_name }}-clone'
+    run_once: True
+    when: result.stdout == '0'
+    #when: result.stdout.find('myclvmd-clone with mydlm-clone') == -1
+
+#  - name: Get resources list
+#    command: 'pcs resource'
+#    run_once: True
+#    register: r_list
+#    tags:
+#      - fip
+
+#  - name: Show List
+#    debug:
+#      var: r_list
+#    tags:
+#      - fip
+
+#  - name: Create floatingIP resource
+#    command: 'pcs resource create fip IPaddr2 ip=192.168.1.98 cidr_netmask=24'
+#    run_once: True
+#    register: result
+#    when: r_list.stdout.find('fip') == -1
+#    tags:
+#      - fip
+
+#  - name: Check Cluster Status
+#    command: 'pcs status'
+#    run_once: True
+#    register: result
+#    tags:
+#      - ss
+ 
+#  - name: Show Status
+#    debug:
+#      #var: result
+#      msg: 'The Cluster is Online'
+#    run_once: True
+#    when: result.stdout.find('Online') != -1
+#    tags:
+#      - ss
+
+  - name: Pause for 5 mins (Time for pcs resources to start)
+    pause:
+      minutes: 5
+
+  - name: Check for Clustered Volume Group presence
+    shell: "vgs | grep {{ vg_name }} | wc -l"
+    register: result
+
+  - name: Create Clustered Volume Group
+    lvg:
+      vg: "{{ vg_name }}"
+      pvs: "{{ shared_volume }}"
+      vg_options: '-Ay -cy'
+    run_once: True
+    when: result.stdout == '0'
+
+  - name: Check if LV present
+    shell: 'lvs | grep {{ lv_name }} | wc -l'
+    register: result
+    changed_when: false
+ 
+  - name: Create Logical Volume
+    lvol:
+      vg: "{{ vg_name }}"
+      lv: "{{ lv_name }}"
+      size: 100%FREE
+      state: present
+    run_once: True
+    when: result.stdout == '0'
+
+  - name: Check if FileSytem exists in the Logical Volume
+    command: 'lsblk -no FSTYPE /dev/{{  vg_name }}/{{ lv_name }}'
+    run_once: True
+    register: result
+
+  - name: Print Result
+    debug:
+      var: result.stdout
+    run_once: True
+
+  - name: Create GFS2 File System
+    command: 'mkfs.gfs2 -j3 -p lock_dlm -t boursa_cluster:{{ gfs2fs_name }} /dev/{{ vg_name }}/{{ lv_name }} -O'
+    run_once: True
+    when: result.stdout == ""
+
+  - name: Check for GFS2 resource
+    shell: 'pcs resource | grep {{ gfs2fs_name }} | wc -l'
+    run_once: True
+    register: result
+
+  - name: Create PCS resource for GFS2 filesystem
+    command: 'pcs resource create {{ gfs2fs_name }} Filesystem device=/dev/{{ vg_name }}/{{ lv_name }} directory={{ gfs2_mount_point }} fstype=gfs2 options=noatime op monitor interval=10s on-fail=fence clone interleave=true'
+    run_once: True
+    when: result.stdout == '0'
+    #when: result.stdout.find('gfs2fs') == -1
+
+  - name: Create GFS2 mount directory
+    file:
+      path: "{{ gfs2_mount_point }}"
+      state: directory
+
+  - name: Check Order Constraint
+    shell: "pcs constraint order | grep -w 'start {{ clvmd_name }}-clone then start {{ gfs2fs_name }}-clone' | wc -l"
+    run_once: True
+    register: result
+
+  - name: Create Order Constraint
+    command: 'pcs constraint order start {{ clvmd_name }}-clone then {{ gfs2fs_name }}-clone'
+    run_once: True
+    when: result.stdout == '0'
+    #when: result.stdout.find('gfs2fs-clone') == -1
+
+  - name: Check Colocation Constraint
+    shell: "pcs constraint colocation | grep -w '{{ gfs2fs_name }}-clone with {{ clvmd_name }}-clone' | wc -l"
+    run_once: True
+    register: result
+
+  - name: Create CoLocation constraint
+    command: 'pcs constraint colocation add {{ gfs2fs_name }}-clone with {{ clvmd_name }}-clone'
+    run_once: True
+    when: result.stdout == '0'
+    #when: result.stdout.find('gfs2fs-clone') == -1
+
+  - name: Create CTDB home
+    file:
+      path: "{{ gfs2_mount_point }}{{ item }}"
+      state: directory
+    with_items:
+      - "{{ ctdb_directories }}"
+    tags:
+      - create_dir
+
+#  - name: Mount /home
+#    mount:
+#      src: "{{ gfs2_mount_point }}/home"
+#      path: /home
+#      state: mounted
+#      fstype: xfs
+
+#  - name: Create symbolic link to /home
+#    file:
+#      dest: '/home'
+#      src: "{{ gfs2_mount_point }}/home"
+#      state: link
+     
+
+######################SELinux Configuration################## 
+  - name: SELinux context in related CTDB directories
+    sefcontext:
+      seuser: system_u
+      target: '/var/ctdb(/.*)?'
+      setype: ctdbd_var_lib_t
+      state: present
+
+  - name: SELinux context in related CTDB directories
+    sefcontext:
+      seuser: system_u
+      target: '/var/lib/ctdb(/.*)?'
+      setype: ctdbd_var_lib_t
+      state: present
+
+  - name: Apply new SELinux file context to filesystem
+    command: 'restorecon -irv /var/ctdb'
+
+  - name: Apply new SELinux file context to filesystem
+    command: 'restorecon -irv /var/lib/ctdb'
+
+##############################################################
+
+  - name: Touch CTDB nodes and Public Addresses File
+    file:
+      path: '/etc/ctdb/{{ item }}'
+      state: touch
+    changed_when: false
+    loop:
+      - nodes
+      - public_addresses
+
+  - name: Populate CTDB nodes
+    lineinfile:
+      path: /etc/ctdb/nodes
+      line: "{{ item }}"
+    with_items: "{{ ansible_play_batch }}"
+
+  - name: Populate CTDB Public Addresses
+    lineinfile:
+      path: /etc/ctdb/public_addresses
+      line: "{{ item }}"
+    with_items: "{{ ctdb_public_addresses }}"
+
+  - name: Include Samba Vars
+    include_vars: vars/samba.yaml
+
+  - name: Samba Config
+    template:
+      src: templates/smb.conf.j2
+      dest: /etc/samba/smb.conf
+
+  - name: krb5 Config
+    template:
+      src: templates/krb5.conf.j2
+      dest: /etc/krb5.conf
+
+  - name: sssd Config
+    template:
+      src: templates/sssd.conf.j2
+      dest: /etc/sssd/sssd.conf
+
+
+######### Tasks to Join Active Directory ##########
+  #- name: Discovery Realm
+  #  command: 'realm discover {{ ad_domain }}'
+
+  #- name: Join {{ ad_domain }}
+  #  command: 'realm  join {{ ad_domain }} -U {{ ad_user }} --client-software=sssd --membership-software=samba'
+  #  notify: restart sssd
+
+###################################################
+
+#  - name: Create a snapshot of cib file
+#    command: 'pcs cluster cib samba.cib'
+#    run_once: true
+  
+  - name: Check for CTDB resource
+    shell: 'pcs resource | grep {{ ctdb_name }} | wc -l'
+    run_once: True
+    register: result
+
+  - name: Create CTDB resource
+    command: "pcs resource create {{ ctdb_name }} ocf:heartbeat:CTDB ctdb_recovery_lock='{{ gfs2_mount_point }}/ctdb_lock/ctdb.lock' ctdb_dbdir=/var/ctdb ctdb_socket=/tmp/ctdb.socket ctdb_logfile=/var/log/ctdb.log op monitor interval=10 timeout=30 op start timeout=90 op stop timeout=100 --clone"
+    run_once: True
+    when: result.stdout == '0'
+
+  - name: Check for Samba Server resource
+    shell: 'pcs resource | grep {{ samba_name }} | wc -l'
+    run_once: True
+    register: result
+
+  - name: Create Samba server resource
+    command: 'pcs resource create {{ samba_name }} systemd:smb --clone'
+    run_once: True
+    when: result.stdout == '0'
+
+  - name: Check Order Constraint
+    shell: "pcs constraint order | grep -w 'start {{ gfs2fs_name }}-clone then start {{ ctdb_name }}-clone' | wc -l"
+    run_once: True
+    register: result
+
+  - name: Create Order Constraint
+    command: 'pcs constraint order start {{ gfs2fs_name }}-clone then {{ ctdb_name }}-clone'
+    run_once: True
+    when: result.stdout == '0'
+
+  - name: Check Order Constraint
+    shell: "pcs constraint order | grep -w 'start {{ ctdb_name }}-clone then start {{ samba_name }}-clone' | wc -l"
+    run_once: True
+    register: result
+
+  - name: Create Order Constraint
+    command: 'pcs constraint order start {{ ctdb_name }}-clone then {{ samba_name }}-clone'
+    run_once: True
+    when: result.stdout == '0'
+
+  - name: Check Colocation Constraint
+    shell: "pcs constraint colocation | grep -w '{{ ctdb_name }}-clone with {{ gfs2fs_name }}-clone' | wc -l"
+    run_once: True
+    register: result
+
+  - name: Create CoLocation constraint
+    command: 'pcs constraint colocation add {{ ctdb_name }}-clone with {{ gfs2fs_name }}-clone'
+    run_once: True
+    when: result.stdout == '0'
+
+
+  - name: Check for Colocation constraint
+    shell: "pcs constraint colocation | grep -w '{{ samba_name }}-clone with {{ ctdb_name }}-clone' | wc -l"
+    run_once: True
+    register: result
+
+
+  - name: Create CoLocation constraint
+    command: 'pcs constraint colocation add {{ samba_name }}-clone with {{ ctdb_name }}-clone'
+    run_once: True
+    when: result.stdout == '0'
+
+
+  post_tasks:
+  - name: Check Cluster Status
+    command: 'pcs status'
+    run_once: True
+    register: result
+ 
+  - name: Show Cluster Status
+    debug:
+      var: result.stdout_lines
+    run_once: True
+    when: result.stdout.find('Online') != -1
+
+  handlers:
+  - name: require_restart
+    reboot:
+
+  - name: restart_pcs
+    service:
+      name: pcsd
+      state: restarted
+
+  - name: chrony_conf_updated
+    service:
+      name: chronyd
+      state: restarted
+
+  - name: restart sssd
+    service:
+      name: sssd
+      state: restarted
