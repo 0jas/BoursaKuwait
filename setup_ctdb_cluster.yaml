@@ -1,7 +1,9 @@
 ---
 - name: Create a samba CTDB cluster
   hosts: samba_servers
-  vars_files: vars/main.yaml
+  vars_files: 
+    - vars/main.yaml
+    - vars/secrets.yaml
   vars:
     my_list: ""
   gather_facts: false
@@ -48,7 +50,7 @@
 
   - name: Update hosts file
     lineinfile:
-      line: "{{ item }}"
+      line: "{{ item.ip }}    {{ item.fqdn }}"
       state: present
       path: /etc/hosts
     with_items: "{{ hosts_file }}"
@@ -56,7 +58,7 @@
   - name: Remove unwanted/default NTP Servers
     lineinfile:
       path: /etc/chrony.conf
-      regexp: 'rhel'
+      regexp: "{{ ntp_servers_exclude }}"
       state: absent
     notify:
       - chrony_conf_updated
@@ -90,7 +92,7 @@
   - name: Update passwd for hacluster user
     user:
       name: hacluster
-      password: "{{ 'redhat' | password_hash('sha512', 'boursasalt') }}"
+      password: "{{ cluster_password }}"
       state: present
     notify: restart_pcs
 
@@ -102,10 +104,8 @@
 
   - name: Create a string of host Names
     set_fact:
-      my_list: "{{ my_list }}  {{ item }}"
-    with_items: "{{ ansible_play_batch }}"
-    tags:
-      - host_l
+      my_list: "{{ my_list }}  {{ item.fqdn }}"
+    with_items: "{{ hosts_file }}"
     
   - name: Auth cluster nodes
     command: 'pcs cluster auth{{ my_list }} -u {{ cluster_user }} -p {{ cluster_password }}'
@@ -181,7 +181,9 @@
 
   - name: Create Fencing Agent
     #command: "pcs stonith create {{ stonith_name }} fence_scsi devices=/dev/sdd pcmk_monitor_action=metadata pcmk_reboot_action=off pcmk_host_list='{{ my_list }}' meta provides=unfencing"
-    command: "pcs stonith create {{ stonith_name }} fence_scsi devices={{ iscsi_shared_disk }} pcmk_monitor_action=metadata pcmk_reboot_action=off pcmk_host_list='{{ my_list }}' meta provides=unfencing"
+    #command: "pcs stonith create {{ stonith_name }} fence_scsi devices={{ iscsi_shared_disk }} pcmk_monitor_action=metadata pcmk_reboot_action=off pcmk_host_list='{{ my_list }}' meta provides=unfencing"
+    command: "pcs stonith create {{ stonith_name }}_{{ item.host }} fence_ilo4_ssh secure=true pcmk_host_list={{ item.host }} ipaddr={{ item.ip }} login={{ item.login }} passwd={{ item.password }} delay=10 op monitor interval=60s"
+    with_items: "{{ ilo4_stonith_list }}"
     run_once: True
     when: result.stdout == '0'
 

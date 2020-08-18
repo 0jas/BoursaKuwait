@@ -6,9 +6,8 @@ ntp_servers:
 ntp_servers_exclude: 'rhel'
 
 hosts_file:
-  - '192.168.1.95	iserver'
-  - '192.168.1.96	samba01'
-  - '192.168.1.97	samba02'
+  - { ip: '192.168.1.95', fqdn: 'samba01' }
+  - { ip: '192.168.1.96', fqdn: 'samba02' }
 
 packages:
   - epel-release
@@ -31,7 +30,6 @@ packages:
   - dlm
   - lvm2-cluster
   - gfs2-utils
-  - targetcli
   - tree
 
 tokens_file: '/var/lib/pcsd/tokens'
@@ -49,10 +47,9 @@ firewall_ports:
   - samba
 
 cluster_user: 'hacluster'
-cluster_password: 'redhat'
 cluster_name: 'boursa_cluster'
 
-stonith_name: 'scsi-stonith-device'
+stonith_name: 'hpilo4'
 iscsi_shared_disk: '/dev/disk/by-id/wwn-0x60000000000000000e00000000010001'
 
 dlm_name: 'dlm'
