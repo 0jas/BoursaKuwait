@@ -1,11 +1,9 @@
 ---
 ntp_servers:
-  - 'server 0.au.pool.ntp.org iburst'
-  - 'server 1.au.pool.ntp.org iburst'
-  - 'server 2.au.pool.ntp.org iburst'
-  - 'server 3.au.pool.ntp.org iburst'
+  - 'server 10.1.8.6 iburst'
+  - 'server 10.2.8.6 iburst'
 
-ntp_servers_exclude: 'centos'
+ntp_servers_exclude: 'rhel'
 
 hosts_file:
   - '192.168.1.95	iserver'

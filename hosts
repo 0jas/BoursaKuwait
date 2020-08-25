@@ -1,4 +1,3 @@
 [samba_servers]
-samba01
-samba02
-
+fs-ho-smb1
+fs-ho-smb2

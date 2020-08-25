@@ -56,7 +56,7 @@
   - name: Remove unwanted/default NTP Servers
     lineinfile:
       path: /etc/chrony.conf
-      regexp: 'centos'
+      regexp: 'rhel'
       state: absent
     notify:
       - chrony_conf_updated
