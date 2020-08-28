@@ -56,7 +56,6 @@ gfs2fs_name: 'gfs2fs'
 ctdb_name: ctdb
 samba_name: smba
 
-#shared_volume: '/dev/disk/by-id/wwn-0x60002ac00000000003002cdd0001c89f'
 shared_volume: '/dev/mapper/mpatha
 vg_name: 'vgclvm'
 lv_name: 'lvcluster'
