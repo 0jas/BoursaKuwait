@@ -76,3 +76,7 @@ ad_domain: 'boursakuwait.com.kw'
 ad_user: shameed
 realm: 'BOURSAKUWAIT.COM.KW'
 workgroup: 'BOURSAKUWAIT'
+
+ilo4_stonith_list:
+  - { ip: '10.250.27.178', host: 'samba01' }
+  - { ip: '10.250.27.220', host: 'samba02' }

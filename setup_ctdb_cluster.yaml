@@ -192,9 +192,7 @@
       var: ilo4_stonith_list
 
   - name: Create Fencing Agent
-    #command: "pcs stonith create {{ stonith_name }} fence_scsi devices=/dev/sdd pcmk_monitor_action=metadata pcmk_reboot_action=off pcmk_host_list='{{ my_list }}' meta provides=unfencing"
-    #command: "pcs stonith create {{ stonith_name }} fence_scsi devices={{ iscsi_shared_disk }} pcmk_monitor_action=metadata pcmk_reboot_action=off pcmk_host_list='{{ my_list }}' meta provides=unfencing"
-    command: "pcs stonith create {{ stonith_name }}_{{ item.host }} fence_ilo4_ssh secure=true pcmk_host_list={{ item.host }} ipaddr={{ item.ip }} login={{ item.login }} passwd={{ item.password }} delay=10 op monitor interval=60s"
+    command: "pcs stonith create {{ stonith_name }}_{{ item.host }} fence_ilo4_ssh secure=true pcmk_host_list={{ item.host }} ipaddr={{ item.ip }} login={{ ilo4_stonith_user }} passwd={{ ilo4_stonith_password }} delay=10 op monitor interval=60s"
     with_items: "{{ ilo4_stonith_list }}"
     run_once: True
     when: result.stdout == '0'
