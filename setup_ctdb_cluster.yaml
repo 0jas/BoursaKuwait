@@ -187,6 +187,10 @@
       var: result
     run_once: True
 
+  - name: Display ilo4 Stonith List
+    debug:
+      var: ilo4_stonith_list
+
   - name: Create Fencing Agent
     #command: "pcs stonith create {{ stonith_name }} fence_scsi devices=/dev/sdd pcmk_monitor_action=metadata pcmk_reboot_action=off pcmk_host_list='{{ my_list }}' meta provides=unfencing"
     #command: "pcs stonith create {{ stonith_name }} fence_scsi devices={{ iscsi_shared_disk }} pcmk_monitor_action=metadata pcmk_reboot_action=off pcmk_host_list='{{ my_list }}' meta provides=unfencing"
