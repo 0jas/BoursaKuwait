@@ -116,7 +116,7 @@
       minutes: 2
  
   - name: Auth cluster nodes
-    command: 'pcs cluster auth{{ my_list }} -u {{ cluster_user }} -p {{ cluster_password }}'
+    command: 'pcs cluster auth{{ my_list }} -u {{ cluster_user }} -p {{ cluster_password_auth }}'
     args:
       creates: "{{ tokens_file }}"
     run_once: True
