@@ -106,7 +106,15 @@
     set_fact:
       my_list: "{{ my_list }}  {{ item.fqdn }}"
     with_items: "{{ hosts_file }}"
-    
+  
+  - name: Display the list of nodes
+    debug:
+      var: my_list
+ 
+  - name: Pause for a couple of mins
+    pause:
+      minutes: 2
+ 
   - name: Auth cluster nodes
     command: 'pcs cluster auth{{ my_list }} -u {{ cluster_user }} -p {{ cluster_password }}'
     args:
