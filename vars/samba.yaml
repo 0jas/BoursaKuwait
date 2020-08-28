@@ -2,7 +2,7 @@
 samba_shares:
 - name: smbshare
   comment: SMB Share 
-  path: /smbshare
+  path: /shameed
   read_only: no
   valid_users: shameed
   inherit_acls: Yes

@@ -6,8 +6,8 @@ ntp_servers:
 ntp_servers_exclude: 'rhel'
 
 hosts_file:
-  - { ip: '192.168.1.95', fqdn: 'samba01' }
-  - { ip: '192.168.1.96', fqdn: 'samba02' }
+  - { ip: '10.0.0.1', fqdn: 'samba01' }
+  - { ip: '10.0.0.2', fqdn: 'samba02' }
 
 packages:
   - epel-release
@@ -50,7 +50,6 @@ cluster_user: 'hacluster'
 cluster_name: 'boursa_cluster'
 
 stonith_name: 'hpilo4'
-iscsi_shared_disk: '/dev/disk/by-id/wwn-0x60000000000000000e00000000010001'
 
 dlm_name: 'dlm'
 clvmd_name: 'clvmd'
@@ -58,7 +57,7 @@ gfs2fs_name: 'gfs2fs'
 ctdb_name: ctdb
 samba_name: smba
 
-shared_volume: '/dev/disk/by-id/ata-VBOX_HARDDISK_VB19add5fe-5351e357'
+shared_volume: '/dev/disk/by-id/wwn-0x60002ac00000000003002cdd0001c89f'
 vg_name: 'vgclvm'
 lv_name: 'lvcluster'
 
@@ -70,11 +69,11 @@ ctdb_directories:
   - "/ctdb_lock"
 
 ctdb_public_addresses:
-  - "192.168.1.80/24 enp0s3"
-  - "192.168.1.81/24 enp0s3"
+  - "10.1.48.26/24 eno49"
+  - "10.1.48.27/24 eno49"
 
 
 ad_domain: 'boursakuwait.com.kw'
-ad_user: Administrator
+ad_user: shameed
 realm: 'BOURSAKUWAIT.COM.KW'
 workgroup: 'BOURSAKUWAIT'

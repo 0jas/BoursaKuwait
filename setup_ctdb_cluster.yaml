@@ -462,12 +462,12 @@
 
 
 ######### Tasks to Join Active Directory ##########
-  #- name: Discovery Realm
-  #  command: 'realm discover {{ ad_domain }}'
+  - name: Discovery Realm
+    command: 'realm discover {{ ad_domain }}'
 
-  #- name: Join {{ ad_domain }}
-  #  command: 'realm  join {{ ad_domain }} -U {{ ad_user }} --client-software=sssd --membership-software=samba'
-  #  notify: restart sssd
+  - name: Join {{ ad_domain }}
+    command: 'echo {{ realm_password }}| realm  join {{ ad_domain }} -U {{ ad_user }} --client-software=sssd --membership-software=samba'
+    notify: restart sssd
 
 ###################################################
 
