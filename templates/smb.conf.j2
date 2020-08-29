@@ -3,7 +3,7 @@
 	realm = {{ realm }}
 	workgroup = {{ workgroup }}
         security = ads
-        kerberos method = system keytab
+        #kerberos method = system keytab
         template homedir = {{ gfs2_mount_point }}/home/%U
 
 	clustering = yes
@@ -19,13 +19,16 @@
 
 	winbind enum users = yes
 	winbind enum groups = yes
+   	winbind use default domain = No
+   	winbind separator = +
 
 	winbind refresh tickets = yes
 	vfs objects = acl-xattr
 	map acl inherit = yes
 	store dos attributes = yes
 
-	dedicated keytab file = /etc/krb5.keytab
+	#dedicated keytab file = /etc/krb5.keytab
+	dedicated keytab file = FILE:{{ gfs2_mount_point }}/krb5.keytab
 	kerberos method = secrets and keytab
     	winbind refresh tickets = Yes
 

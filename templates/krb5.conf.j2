@@ -7,8 +7,10 @@ includedir /etc/krb5.conf.d/
  admin_server = FILE:/var/log/kadmind.log
 
 [libdefaults]
+ default_keytab_name = {{ gfs2_mount_point }}/krb5.keytab
  dns_lookup_realm = false
- dns_lookup_kdc = true
+ #dns_lookup_kdc = true
+ dns_lookup_kdc = false
  ticket_lifetime = 24h
  renew_lifetime = 7d
  forwardable = true

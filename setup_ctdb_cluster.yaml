@@ -316,7 +316,7 @@
     run_once: True
     when: result.stdout == '0'
 
-  - name: Create CTDB home
+  - name: Create CTDB Directories
     file:
       path: "{{ gfs2_mount_point }}{{ item }}"
       state: directory
@@ -405,26 +405,26 @@
       mode: '0600'
 
 ######### Tasks to Join Active Directory ##########
-  - name: Discovery Realm
-    command: 'realm discover {{ ad_domain }}'
-
-  - name: Pause for 2 minutes
-    pause:
-      minutes: 2
-
-  - name: Join {{ ad_domain }}
-    command: 'echo {{ realm_password }}| realm join {{ ad_domain }} -U {{ ad_user }} --client-software=sssd --membership-software=samba'
-
-  - name: Pause for 2 minutes
-    pause:
-      minutes: 2
-  
-  - name: Restart and Enable ssd
-    service:
-      name: sssd
-      state: restarted
-      enabled: yes
-
+#  - name: Discovery Realm
+#    command: 'realm discover {{ ad_domain }}'
+#
+#  - name: Pause for 2 minutes
+#    pause:
+#      minutes: 2
+#
+#  - name: Join {{ ad_domain }}
+#    command: 'echo {{ realm_password }}| realm join {{ ad_domain }} -U {{ ad_user }} --client-software=sssd --membership-software=samba'
+#
+#  - name: Pause for 2 minutes
+#    pause:
+#      minutes: 2
+#  
+#  - name: Restart and Enable ssd
+#    service:
+#      name: sssd
+#      state: restarted
+#      enabled: yes
+#
 ###################################################
   
   - name: Check for CTDB resource
@@ -433,20 +433,48 @@
     register: result
 
   - name: Create CTDB resource
-    command: "pcs resource create {{ ctdb_name }} ocf:heartbeat:CTDB ctdb_recovery_lock='{{ gfs2_mount_point }}/ctdb_lock/ctdb.lock' ctdb_dbdir=/var/ctdb ctdb_socket=/var/run/ctdb/ctdbd.socket ctdb_logfile=/var/log/ctdb.log op monitor interval=10 timeout=30 op start timeout=90 op stop timeout=100 --clone"
+    command: "pcs resource create {{ ctdb_name }} ocf:heartbeat:CTDB ctdb_recovery_lock='{{ gfs2_mount_point }}/ctdb_lock/ctdb.lock' ctdb_dbdir=/var/lib/ctdb ctdb_socket=/var/run/ctdb/ctdbd.socket ctdb_logfile=/var/log/ctdb.log ctdb_debuglevel=1 ctdb_manages_samba='no' ctdb_manages_winbind='no' op monitor interval=10 timeout=30 op start timeout=90 op stop timeout=100 --clone"
     run_once: True
     when: result.stdout == '0'
 
+#  - name: Check for Samba Server resource
+#    shell: 'pcs resource | grep {{ samba_name }} | wc -l'
+#    run_once: True
+#    register: result
+
+#  - name: Create Samba server resource
+#    command: 'pcs resource create {{ samba_name }} systemd:smb --clone'
+#    run_once: True
+#    when: result.stdout == '0'
+
+######################### Latest Addition ##################
   - name: Check for Samba Server resource
-    shell: 'pcs resource | grep {{ samba_name }} | wc -l'
+    shell: 'pcs resource | grep {{ hasmbshare_groupname }} | wc -l'
     run_once: True
     register: result
 
-  - name: Create Samba server resource
-    command: 'pcs resource create {{ samba_name }} systemd:smb --clone'
+  - name: Create Samba Resource
+    command: 'pcs resource create {{ samba_name }} systemd:smb --group {{ hasmbshare_groupname }}'
     run_once: True
     when: result.stdout == '0'
 
+  - name: Create Winbind Resource
+    command: 'pcs resource create {{ winbind_name }} systemd:winbind --group {{ hasmbshare_groupname }}'
+    run_once: True
+    when: result.stdout == '0'
+
+  - name: Create nmb Resource
+    command: 'pcs resource create {{ nmb_name }} systemd:nmb --group {{ hasmbshare_groupname }}'
+    run_once: True
+    when: result.stdout == '0'
+
+  - name: Clone the Resource Group
+    command: 'pcs resource clone {{ hasmbshare_groupname }}'
+    run_once: True
+    when: result.stdout == '0'
+
+#############################################################
+  
   - name: Check Order Constraint
     shell: "pcs constraint order | grep -w 'start {{ gfs2fs_name }}-clone then start {{ ctdb_name }}-clone' | wc -l"
     run_once: True
@@ -457,16 +485,29 @@
     run_once: True
     when: result.stdout == '0'
 
+#  - name: Check Order Constraint
+#    shell: "pcs constraint order | grep -w 'start {{ ctdb_name }}-clone then start {{ samba_name }}-clone' | wc -l"
+#    run_once: True
+#    register: result
+
+#  - name: Create Order Constraint
+#    command: 'pcs constraint order start {{ ctdb_name }}-clone then {{ samba_name }}-clone'
+#    run_once: True
+#    when: result.stdout == '0'
+
+######################### Latest Addition ##################
+
   - name: Check Order Constraint
-    shell: "pcs constraint order | grep -w 'start {{ ctdb_name }}-clone then start {{ samba_name }}-clone' | wc -l"
+    shell: "pcs constraint order | grep -w 'start {{ ctdb_name }}-clone then start {{ hasmbshare_groupname }}-clone' | wc -l"
     run_once: True
     register: result
 
   - name: Create Order Constraint
-    command: 'pcs constraint order start {{ ctdb_name }}-clone then {{ samba_name }}-clone'
+    command: 'pcs constraint order start {{ ctdb_name }}-clone then {{ hasmbshare_groupname }}-clone'
     run_once: True
     when: result.stdout == '0'
 
+#############################################################
   - name: Check Colocation Constraint
     shell: "pcs constraint colocation | grep -w '{{ ctdb_name }}-clone with {{ gfs2fs_name }}-clone' | wc -l"
     run_once: True
@@ -478,17 +519,30 @@
     when: result.stdout == '0'
 
 
+#  - name: Check for Colocation constraint
+#    shell: "pcs constraint colocation | grep -w '{{ samba_name }}-clone with {{ ctdb_name }}-clone' | wc -l"
+#    run_once: True
+#    register: result
+
+
+#  - name: Create CoLocation constraint
+#    command: 'pcs constraint colocation add {{ samba_name }}-clone with {{ ctdb_name }}-clone'
+#    run_once: True
+#    when: result.stdout == '0'
+
+######################### Latest Addition ##################
+
   - name: Check for Colocation constraint
-    shell: "pcs constraint colocation | grep -w '{{ samba_name }}-clone with {{ ctdb_name }}-clone' | wc -l"
+    shell: "pcs constraint colocation | grep -w '{{ hasmbshare_groupname }}-clone with {{ ctdb_name }}-clone' | wc -l"
     run_once: True
     register: result
 
-
   - name: Create CoLocation constraint
-    command: 'pcs constraint colocation add {{ samba_name }}-clone with {{ ctdb_name }}-clone'
+    command: 'pcs constraint colocation add {{ hasmbshare_groupname }}-clone with {{ ctdb_name }}-clone'
     run_once: True
     when: result.stdout == '0'
 
+#############################################################
 
   post_tasks:
   - name: Check Cluster Status
