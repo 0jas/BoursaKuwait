@@ -1,14 +1,8 @@
 ---
 samba_shares:
-- name: smbshare
+- name: shameed
   comment: SMB Share 
-  path: /shameed
+  path: shameed
   read_only: no
   valid_users: shameed
-  inherit_acls: Yes
-- name: Gopala
-  comment: Gopala Share
-  path: /gopala
-  read_only: no
-  valid_users: vgopala
   inherit_acls: Yes

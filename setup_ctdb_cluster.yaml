@@ -443,8 +443,8 @@
   - name: Populate CTDB nodes
     lineinfile:
       path: /etc/ctdb/nodes
-      line: "{{ item }}"
-    with_items: "{{ ansible_play_batch }}"
+      line: "{{ item.ip }}"
+    with_items: "{{ hosts_file }}"
 
   - name: Populate CTDB Public Addresses
     lineinfile:
@@ -491,7 +491,7 @@
     register: result
 
   - name: Create CTDB resource
-    command: "pcs resource create {{ ctdb_name }} ocf:heartbeat:CTDB ctdb_recovery_lock='{{ gfs2_mount_point }}/ctdb_lock/ctdb.lock' ctdb_dbdir=/var/ctdb ctdb_socket=/tmp/ctdb.socket ctdb_logfile=/var/log/ctdb.log op monitor interval=10 timeout=30 op start timeout=90 op stop timeout=100 --clone"
+    command: "pcs resource create {{ ctdb_name }} ocf:heartbeat:CTDB ctdb_recovery_lock='{{ gfs2_mount_point }}/ctdb_lock/ctdb.lock' ctdb_dbdir=/var/ctdb ctdb_socket=/var/run/ctdb/ctdbd.socket ctdb_logfile=/var/log/ctdb.log op monitor interval=10 timeout=30 op start timeout=90 op stop timeout=100 --clone"
     run_once: True
     when: result.stdout == '0'
 
@@ -574,7 +574,7 @@
       name: chronyd
       state: restarted
 
-  - name: restart sssd
-    service:
-      name: sssd
-      state: restarted
+#  - name: restart sssd
+#    service:
+#      name: sssd
+#      state: restarted
