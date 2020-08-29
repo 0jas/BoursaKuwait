@@ -26,10 +26,15 @@
 	store dos attributes = yes
 
 	dedicated keytab file = /etc/krb5.keytab
+	kerberos method = secrets and keytab
+    	winbind refresh tickets = Yes
 
 	winbind use default domain = yes
 
+	printing = cups
+	printcap name = /dev/null
 	load printers = no
+        cups options = raw
 
 	machine password timeout = 0
 

@@ -80,7 +80,7 @@
       name: hacluster
       password: "{{ cluster_password }}"
       state: present
-    notify: restart_pcs
+    #notify: restart_pcs
 
   - name: Start and Enable cluster services
     service:
@@ -408,14 +408,22 @@
   - name: Discovery Realm
     command: 'realm discover {{ ad_domain }}'
 
+  - name: Pause for 2 minutes
+    pause:
+      minutes: 2
+
   - name: Join {{ ad_domain }}
     command: 'echo {{ realm_password }}| realm join {{ ad_domain }} -U {{ ad_user }} --client-software=sssd --membership-software=samba'
-    #notify: restart sssd
 
-  - name: Restart sssd
+  - name: Pause for 2 minutes
+    pause:
+      minutes: 2
+  
+  - name: Restart and Enable ssd
     service:
       name: sssd
       state: restarted
+      enabled: yes
 
 ###################################################
   
