@@ -68,8 +68,8 @@ ctdb_directories:
   - "/ctdb_lock"
 
 ctdb_public_addresses:
-  - "10.1.48.26/24 eno49"
-  - "10.1.48.27/24 eno49"
+  - "10.1.48.25/24 eno49"
+  - "10.1.48.29/24 eno49"
 
 
 ad_domain: 'boursakuwait.com.kw'
