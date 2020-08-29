@@ -1,5 +1,6 @@
 [global]
 	access based share enum = yes
+	netbios name = smbserver
 	realm = {{ realm }}
 	workgroup = {{ workgroup }}
         security = ads
@@ -14,7 +15,8 @@
 
 	idmap config * : backend = tdb
 	idmap config * : range = 10000-199999
-	idmap config {{ workgroup }}:backend = sss
+	#idmap config {{ workgroup }}:backend = sss
+	idmap config {{ workgroup }}:backend = ad
 	idmap config {{ workgroup }}:range = 200000-2147483647
 
 	winbind enum users = yes
@@ -23,7 +25,7 @@
    	winbind separator = +
 
 	winbind refresh tickets = yes
-	vfs objects = acl-xattr
+	vfs objects = acl_xattr
 	map acl inherit = yes
 	store dos attributes = yes
 
