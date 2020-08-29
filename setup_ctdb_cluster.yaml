@@ -400,14 +400,16 @@
     template:
       src: templates/sssd.conf.j2
       dest: /etc/sssd/sssd.conf
-
+      owner: root
+      group: root
+      mode: '0600'
 
 ######### Tasks to Join Active Directory ##########
   - name: Discovery Realm
     command: 'realm discover {{ ad_domain }}'
 
   - name: Join {{ ad_domain }}
-    command: 'echo {{ realm_password }}| realm  join {{ ad_domain }} -U {{ ad_user }} --client-software=sssd --membership-software=samba'
+    command: 'echo {{ realm_password }}| realm join {{ ad_domain }} -U {{ ad_user }} --client-software=sssd --membership-software=samba'
     #notify: restart sssd
 
   - name: Restart sssd

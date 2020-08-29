@@ -16,6 +16,7 @@ packages:
   - samba
   - samba-common
   - samba-winbind
+  - samba-client
   - krb5-workstation
   - realmd
   - oddjob
@@ -30,6 +31,7 @@ packages:
   - dlm
   - lvm2-cluster
   - gfs2-utils
+  - sssd-winbind-idmap
 
 tokens_file: '/var/lib/pcsd/tokens'
 corosync_conf: '/etc/corosync/corosync.conf'
