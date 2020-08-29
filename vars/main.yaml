@@ -42,6 +42,7 @@ disable_services:
   - smb
   - nmb
   - winbind
+  - sssd
 
 firewall_ports:
   - high-availability
@@ -74,7 +75,7 @@ ctdb_directories:
   - "/ctdb_lock"
 
 ctdb_public_addresses:
-  - "10.1.48.25/24 eno49"
+  - "10.1.48.28/24 eno49"
   - "10.1.48.29/24 eno49"
 
 
