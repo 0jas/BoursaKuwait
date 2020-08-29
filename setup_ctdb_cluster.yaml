@@ -6,20 +6,6 @@
     - vars/main.yaml
     - vars/secrets.yaml
   tasks:
-#  - name: Install EPEL repo
-#    shell:
-#      cmd: 'yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm'
-#    ignore_errors: True
-#    yum:
-#      name: epel-release
-#      state: present
-
-#  - name: Update all packages
-#    yum:
-#      name: '*'
-#      state: latest
-#    notify: require_restart
-
   - name: Configure SELinux
     selinux:
       policy: targeted
@@ -111,10 +97,6 @@
     debug:
       var: my_list
  
-  - name: Pause for a couple of mins
-    pause:
-      minutes: 2
- 
   - name: Auth cluster nodes
     command: 'pcs cluster auth{{ my_list }} -u {{ cluster_user }} -p {{ cluster_password_auth }}'
     args:
@@ -154,11 +136,6 @@
     run_once: True
     when:  result.stdout.find('false') == -1
     tags: st_shw
-
-#  - name: Disable STONITH
-#    command: 'pcs property set stonith-enabled=false'
-#    when: result.stdout.find('false') == -1
-#    tags: st_shw
 
 #################################################
 ################### Create cLVM #################
@@ -205,10 +182,6 @@
     retries: 10
     delay: 10
 
-#  - name: Get PCS resources
-#    command: 'pcs resource'
-#    register: result 
-
   - name: Check Controld
     shell: "pcs resource | grep {{ dlm_name }} | wc -l"
     run_once: True
@@ -218,7 +191,6 @@
     command: 'pcs resource create {{ dlm_name }} controld op monitor interval=30s on-fail=fence clone interleave=true ordered=true'
     run_once: True
     when: result.stdout == '0'
-#    when: result.stdout.find('mydlm-clone') == -1
 
   - name: Loop till Controld is Satrted
     shell: "pcs resource | grep -A 1 {{ dlm_name }} | grep -i started | wc -l"
@@ -236,7 +208,6 @@
     command: 'pcs resource create {{ clvmd_name }} clvm op monitor interval=30s on-fail=fence clone interleave=true ordered=true'
     run_once: True
     when: result.stdout == '0'
-#    when: result.stdout.find('myclvmd-clone') == -1
 
   - name: Loop till cLVMd is Started
     shell: "pcs resource | grep -A 1 {{ clvmd_name }} | grep -i started | wc -l"
@@ -263,44 +234,6 @@
     command: 'pcs constraint colocation add {{ clvmd_name }}-clone with {{ dlm_name }}-clone'
     run_once: True
     when: result.stdout == '0'
-    #when: result.stdout.find('myclvmd-clone with mydlm-clone') == -1
-
-#  - name: Get resources list
-#    command: 'pcs resource'
-#    run_once: True
-#    register: r_list
-#    tags:
-#      - fip
-
-#  - name: Show List
-#    debug:
-#      var: r_list
-#    tags:
-#      - fip
-
-#  - name: Create floatingIP resource
-#    command: 'pcs resource create fip IPaddr2 ip=192.168.1.98 cidr_netmask=24'
-#    run_once: True
-#    register: result
-#    when: r_list.stdout.find('fip') == -1
-#    tags:
-#      - fip
-
-#  - name: Check Cluster Status
-#    command: 'pcs status'
-#    run_once: True
-#    register: result
-#    tags:
-#      - ss
- 
-#  - name: Show Status
-#    debug:
-#      #var: result
-#      msg: 'The Cluster is Online'
-#    run_once: True
-#    when: result.stdout.find('Online') != -1
-#    tags:
-#      - ss
 
   - name: Pause for 5 mins (Time for pcs resources to start)
     pause:
@@ -372,7 +305,6 @@
     command: 'pcs constraint order start {{ clvmd_name }}-clone then {{ gfs2fs_name }}-clone'
     run_once: True
     when: result.stdout == '0'
-    #when: result.stdout.find('gfs2fs-clone') == -1
 
   - name: Check Colocation Constraint
     shell: "pcs constraint colocation | grep -w '{{ gfs2fs_name }}-clone with {{ clvmd_name }}-clone' | wc -l"
@@ -383,7 +315,6 @@
     command: 'pcs constraint colocation add {{ gfs2fs_name }}-clone with {{ clvmd_name }}-clone'
     run_once: True
     when: result.stdout == '0'
-    #when: result.stdout.find('gfs2fs-clone') == -1
 
   - name: Create CTDB home
     file:
@@ -477,13 +408,14 @@
 
   - name: Join {{ ad_domain }}
     command: 'echo {{ realm_password }}| realm  join {{ ad_domain }} -U {{ ad_user }} --client-software=sssd --membership-software=samba'
-    notify: restart sssd
+    #notify: restart sssd
+
+  - name: Restart sssd
+    service:
+      name: sssd
+      state: restarted
 
 ###################################################
-
-#  - name: Create a snapshot of cib file
-#    command: 'pcs cluster cib samba.cib'
-#    run_once: true
   
   - name: Check for CTDB resource
     shell: 'pcs resource | grep {{ ctdb_name }} | wc -l'
