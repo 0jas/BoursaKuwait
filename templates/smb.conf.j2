@@ -25,12 +25,11 @@
 	winbind refresh tickets = yes
 	vfs objects = acl_xattr
 	map acl inherit = yes
-	store dos attributes = yes
+	#store dos attributes = yes
 
 	#dedicated keytab file = /etc/krb5.keytab
 	dedicated keytab file = FILE:{{ gfs2_mount_point }}/krb5.keytab
 	kerberos method = secrets and keytab
-    	winbind refresh tickets = Yes
 
 	winbind use default domain = yes
 
