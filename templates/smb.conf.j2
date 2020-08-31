@@ -4,7 +4,6 @@
 	realm = {{ realm }}
 	workgroup = {{ workgroup }}
         security = ads
-        #kerberos method = system keytab
         template homedir = {{ gfs2_mount_point }}/home/%U
 
 	clustering = yes
@@ -19,7 +18,6 @@
 
 	winbind enum users = yes
 	winbind enum groups = yes
-   	winbind use default domain = No
    	winbind separator = +
 
 	winbind refresh tickets = yes

@@ -286,7 +286,7 @@
     register: result
 
   - name: Create PCS resource for GFS2 filesystem
-    command: 'pcs resource create {{ gfs2fs_name }} Filesystem device=/dev/{{ vg_name }}/{{ lv_name }} directory={{ gfs2_mount_point }} fstype=gfs2 options=noatime op monitor interval=10s on-fail=fence clone interleave=true'
+    command: 'pcs resource create {{ gfs2fs_name }} Filesystem device=/dev/{{ vg_name }}/{{ lv_name }} directory={{ gfs2_mount_point }} fstype=gfs2 options=acl,noatime op monitor interval=10s on-fail=fence clone interleave=true'
     run_once: True
     when: result.stdout == '0'
     #when: result.stdout.find('gfs2fs') == -1
