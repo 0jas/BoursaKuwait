@@ -32,6 +32,7 @@ packages:
   - lvm2-cluster
   - gfs2-utils
   - sssd-winbind-idmap
+  - quota
 
 tokens_file: '/var/lib/pcsd/tokens'
 corosync_conf: '/etc/corosync/corosync.conf'
