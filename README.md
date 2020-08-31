@@ -46,7 +46,7 @@ This project is to create a two node Active-Active file sever integrated with Ac
 	* ```net ads keytab add cifs -U <username>```
 	* ```authconfig --enablewinbind --enablewinbindauth --enablemkhomedir --disablesssd --disablesssdauth --update```
 8. Restart the cluster. Type the command in any server node. ```pcs cluster stop --all && pcs cluster start --all```
-9. Now all the resources are is "Started" state.
+9. Now all the resources are in "Started" state.
 
 ## Checking the status of the cluster
 
