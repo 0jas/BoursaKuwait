@@ -13,7 +13,7 @@ This project is to create a two node Active-Active file sever integrated with Ac
 ## Prerequisite
 1. InstallBox - Virtual Machine/PC/Laptop with latest Ansible and Git installed.
 2. Network access (ssh) to the two file servers from InstallBox.
-3. Two Red Hat subscription with High Availability and Resilient Storage add-on subscription.
+3. A Red Hat subscription with two entitlements having High Availability and Resilient Storage add-on(s).
 4. Private network IP address for cluster communication (e.g: 10.0.0.1; 10.0.0.2).
 5. Two public IP addresses for file server.
 6. Two additional static IPs for individual server access.
@@ -45,7 +45,7 @@ This project is to create a two node Active-Active file sever integrated with Ac
 	* ```net ads join -U <username>```
 	* ```net ads keytab add cifs -U <username>```
 	* ```authconfig --enablewinbind --enablewinbindauth --enablemkhomedir --disablesssd --disablesssdauth --update```
-8. Restart the cluster. Type the command in any server node. ```pcs cluster stop --all```
+8. Restart the cluster. Type the commands in any server node. ```pcs cluster stop --all```
   ```pcs cluster start --all```
 9. Now all the resources are in "Started" state.
 
