@@ -20,6 +20,7 @@ This project is to create a two node Active-Active file sever integrated with Ac
 7. Shared storage created and presented to both the servers.
 8. Internet access on the InstallBox to download source code from git and to install the required packages.
 9. If not using Satellite server, internet connectivity on both the servers.
+10. An 'A' record in DNS pointing to the two CTDB public addresses.
 
 ## Installation
 1. Configure private IPs and static IPs on the servers.
