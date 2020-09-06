@@ -41,21 +41,21 @@ This project is to create a two node Active-Active file sever integrated with Ac
 5. The cluster is fully functional only after all the resources have started.
 6. If this is the first time the cluster is setup, last resource "hasmbserver-clone" is in "Stopped" state as "krb5.keytab" is absent.
 7. Join the nodes to the domain. Type the following commands on both the nodes: 
-	* net ads join -U *username*
-	* net ads keytab add cifs -U *username*
-	* authconfig --enablewinbind --enablewinbindauth --enablemkhomedir --disablesssd --disablesssdauth --update
-8. Restart the cluster. Type the command in any server node. "pcs cluster stop --all && pcs cluster start --all"
+	* ```net ads join -U *username*```
+	* ```net ads keytab add cifs -U *username*```
+	* ```authconfig --enablewinbind --enablewinbindauth --enablemkhomedir --disablesssd --disablesssdauth --update```
+8. Restart the cluster. Type the command in any server node. ```pcs cluster stop --all && pcs cluster start --all```
 9. Now all the resources are is "Started" state.
 
 ## Checking the status of the cluster
 
 1. Login in to any server node.
-2. "pcs status" for cluster status.
-3. "ctdb status" for ctdb status.
-4. "ctdb nodestatus" for ctdb node status.
-5. "ctdb ip" to list file server ips.
-6. "klist -k" to list keys held in a keytab file. 
-7. "net ads info" info of LDAP server.
-8. "wbinfo -u" to list AD users.
-9. "wbinfo -g" to list AD groups.
-10. "id <AD user>" user info of AD user.
+2. ```pcs status``` for cluster status.
+3. ```ctdb status``` for ctdb status.
+4. ```ctdb nodestatus``` for ctdb node status.
+5. ```ctdb ip``` to list file server ips.
+6. ```klist -k``` to list keys held in a keytab file. 
+7. ```net ads info``` info of LDAP server.
+8. ```wbinfo -u``` to list AD users.
+9. ```wbinfo -g``` to list AD groups.
+10. ```id *AD user*``` user info of AD user.
