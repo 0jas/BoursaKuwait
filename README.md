@@ -25,15 +25,18 @@ This project is to create a two node Active-Active file sever integrated with Ac
 1. Configure private IPs and static IPs on the servers.
 2. Register the servers to either the Satellite server or Red Hat Network.
 3. On InstallBox:
- 	* Clone the repository from github.com: git clone https://github.com/0jas/BoursaKuwait.git
+ 	* Clone the repository from github.com: 
+	```
+	git clone https://github.com/0jas/BoursaKuwait.git
+	```
 	* Change directory: cd BoursaKuwait
 	* Run ansible playbook to deploy the cluster: ansible-playbook setup_ctdb_cluster.yaml --ask-vault-pass
 4. Once the playbook finishes execution, login to any server node and type "pcs status" at the prompt to check the status of the cluster.
 5. The cluster is fully functional only after all the resources have started.
 6. If this is the first time the cluster is setup, last resource "hasmbserver-clone" is in "Stopped" state as "krb5.keytab" is absent.
 7. Join the nodes to the domain. Type the following commands on both the nodes: 
-	* net ads join -U <username>
-	* net ads keytab add cifs -U <username>
+	* net ads join -U *username*
+	* net ads keytab add cifs -U *username*
 	* authconfig --enablewinbind --enablewinbindauth --enablemkhomedir --disablesssd --disablesssdauth --update
 8. Restart the cluster. Type the command in any server node. "pcs cluster stop --all && pcs cluster start --all"
 9. Now all the resources are is "Started" state.
