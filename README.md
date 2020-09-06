@@ -58,4 +58,4 @@ This project is to create a two node Active-Active file sever integrated with Ac
 7. ```net ads info``` info of LDAP server.
 8. ```wbinfo -u``` to list AD users.
 9. ```wbinfo -g``` to list AD groups.
-10. ```id *AD user*``` user info of AD user.
+10. ```id <AD user>``` user info of AD user.
