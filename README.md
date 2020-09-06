@@ -29,9 +29,15 @@ This project is to create a two node Active-Active file sever integrated with Ac
 	```
 	git clone https://github.com/0jas/BoursaKuwait.git
 	```
-	* Change directory: cd BoursaKuwait
-	* Run ansible playbook to deploy the cluster: ansible-playbook setup_ctdb_cluster.yaml --ask-vault-pass
-4. Once the playbook finishes execution, login to any server node and type "pcs status" at the prompt to check the status of the cluster.
+	* Change directory: 
+	```
+	cd BoursaKuwait
+	```
+	* Run ansible playbook to deploy the cluster: 
+	```
+	ansible-playbook setup_ctdb_cluster.yaml --ask-vault-pass
+	```
+4. Once the playbook finishes execution, login to any server node and type ```pcs status``` at the prompt to check the status of the cluster.
 5. The cluster is fully functional only after all the resources have started.
 6. If this is the first time the cluster is setup, last resource "hasmbserver-clone" is in "Stopped" state as "krb5.keytab" is absent.
 7. Join the nodes to the domain. Type the following commands on both the nodes: 
