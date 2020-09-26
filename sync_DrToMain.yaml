@@ -1,0 +1,28 @@
+---
+- name: Sync Pull task - Executed on  the Destination host "{{groups['samba_servers_dr'][0]}}"
+  hosts: "{{groups['samba_servers_main'][1]}}"
+  user: root
+  vars:
+    gfs2_mount_point: "/clusterfs"
+  tasks:   
+    - name: Push data from DR site to Main site
+      synchronize:
+        src: "{{ item }}"
+        dest: "{{ item }}"
+        mode: push
+        copy_links: yes
+        recursive: yes
+      #  delete: yes
+        group: yes
+        links: yes
+        owner: yes
+        perms: yes
+        times: yes
+        rsync_opts:
+          - "--executability"
+          - "--acls"
+          - "--xattrs"
+      delegate_to: "{{groups['samba_servers_dr'][0]}}"
+      run_once: true
+      with_items:
+        - "{{ gfs2_mount_point }}"

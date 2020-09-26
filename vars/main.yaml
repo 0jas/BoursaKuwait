@@ -33,6 +33,7 @@ packages:
   - gfs2-utils
   - sssd-winbind-idmap
   - quota
+  - rsync
 
 packages_dr:
   - cifs-utils
@@ -50,6 +51,7 @@ packages_dr:
   - chrony
   - sssd-winbind-idmap
   - quota
+  - rsync
 
 tokens_file: '/var/lib/pcsd/tokens'
 corosync_conf: '/etc/corosync/corosync.conf'

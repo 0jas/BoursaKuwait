@@ -1,6 +1,6 @@
 ---
 - name: Create share directories, define ACLs and update Samba configuration.
-  hosts: samba_servers
+  hosts: samba_servers_main
   gather_facts: false
   vars_files:
     - vars/main.yaml
@@ -13,7 +13,7 @@
       state: directory
       owner: root
       group: root
-      mode: '0770'
+      mode: '{{ item.mode }}'
     with_items:
       - "{{ samba_shares }}"
 
@@ -28,7 +28,6 @@
 
   - name: Samba Config
     template:
-      hosts: samba_servers_main
       src: templates/smb.conf.j2
       dest: /etc/samba/smb.conf
 

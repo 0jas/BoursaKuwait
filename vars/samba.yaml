@@ -1,4 +1,4 @@
 ---
 samba_shares:
-- { name: Common, path: common, acls: [ "o::rwx" ] }
+- { name: Common, path: common, mode: 02770, acls: [ "o::rwx" ] }
 
