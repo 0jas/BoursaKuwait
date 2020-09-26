@@ -107,6 +107,7 @@
       path: "{{ gfs2_mount_point }}"
       src: '/dev/{{  vg_name }}/{{ lv_name }}'
       state: mounted
+      fstype: xfs
 
   - name: Create and entry in fstab
     lineinfile:
