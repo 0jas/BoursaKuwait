@@ -9,8 +9,6 @@
     selinux:
       policy: targeted
       state: permissive
-    notify:
-      - require_restart
 
   - name: Install packages required for PCS Cluster
     yum:
@@ -38,8 +36,6 @@
       path: /etc/chrony.conf
       regexp: "{{ ntp_servers_exclude }}"
       state: absent
-    notify:
-      - chrony_conf_updated
 
   - name: Add required NTP servers
     lineinfile:
@@ -48,8 +44,6 @@
       insertafter: '^# Please'
       line: "{{ item }}"
     with_items: "{{ ntp_servers }}"
-    notify:
-      - chrony_conf_updated
 
   - name: Start and Enable Chrony service
     service:
