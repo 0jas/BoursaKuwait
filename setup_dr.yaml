@@ -31,7 +31,7 @@
       enabled: False
     with_items: "{{ disable_services_dr }}"
  
-   - name: Enable and Start Services
+  - name: Enable and Start Services
     service:
       name: "{{ item }}"
       state: started
