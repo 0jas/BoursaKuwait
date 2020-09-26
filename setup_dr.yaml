@@ -10,7 +10,7 @@
       policy: targeted
       state: permissive
 
-  - name: Install packages required for PCS Cluster
+  - name: Install packages
     yum:
       name: "{{ packages_dr }}"
       state: latest
@@ -30,6 +30,13 @@
       state: stopped
       enabled: False
     with_items: "{{ disable_services_dr }}"
+ 
+   - name: Enable and Start Services
+    service:
+      name: "{{ item }}"
+      state: started
+      enabled: True
+    with_items: "{{ enable_services_dr }}"
 
   - name: Remove unwanted/default NTP Servers
     lineinfile:

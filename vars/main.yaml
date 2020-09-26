@@ -64,10 +64,12 @@ disable_services:
   - sssd
 
 disable_services_dr:
+  - sssd
+
+enable_services_dr:
   - smb
   - nmb
   - winbind
-  - sssd
 
 firewall_ports:
   - high-availability
