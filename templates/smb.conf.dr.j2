@@ -6,9 +6,6 @@
         security = ads
         template homedir = {{ gfs2_mount_point }}/home/%U
 
-	clustering = yes
-	ctdbd socket = /var/run/ctdb/ctdbd.socket
-
 	log file = /var/log/samba/%m.log
 	log level = 1
 
@@ -23,9 +20,7 @@
 	winbind refresh tickets = yes
 	vfs objects = acl_xattr
 	map acl inherit = yes
-	#store dos attributes = yes
 
-	#dedicated keytab file = /etc/krb5.keytab
 	dedicated keytab file = FILE:{{ gfs2_mount_point }}/krb5.keytab
 	kerberos method = secrets and keytab
 

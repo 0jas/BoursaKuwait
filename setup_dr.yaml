@@ -1,0 +1,143 @@
+---
+- name: Create a samba Server
+  hosts: samba_servers_dr
+  gather_facts: false
+  vars_files:
+    - vars/main.yaml
+  tasks:
+  - name: Configure SELinux
+    selinux:
+      policy: targeted
+      state: permissive
+    notify:
+      - require_restart
+
+  - name: Install packages required for PCS Cluster
+    yum:
+      name: "{{ packages_dr }}"
+      state: latest
+    register: result
+    tags:
+      - install_packages
+
+  - name: Display the result of install packages
+    debug:
+      var: result
+    tags:
+      - install_packages
+
+  - name: Disable and Stop Services
+    service:
+      name: "{{ item }}"
+      state: stopped
+      enabled: False
+    with_items: "{{ disable_services_dr }}"
+
+  - name: Remove unwanted/default NTP Servers
+    lineinfile:
+      path: /etc/chrony.conf
+      regexp: "{{ ntp_servers_exclude }}"
+      state: absent
+    notify:
+      - chrony_conf_updated
+
+  - name: Add required NTP servers
+    lineinfile:
+      path: /etc/chrony.conf
+      state: present
+      insertafter: '^# Please'
+      line: "{{ item }}"
+    with_items: "{{ ntp_servers }}"
+    notify:
+      - chrony_conf_updated
+
+  - name: Start and Enable Chrony service
+    service:
+      name: chronyd
+      enabled: True
+      state: started
+
+  - name: Open firewall ports
+    firewalld:
+      service: "{{ item }}"
+      permanent: Yes
+      immediate: Yes
+      state: enabled
+    with_items: "{{ firewall_ports_dr }}"
+    tags:
+      - firewall
+
+  - name: Check for Volume Group presence
+    shell: "vgs | grep {{ vg_name }} | wc -l"
+    register: result
+    changed_when: false
+
+  - name: Create Volume Group
+    lvg:
+      vg: "{{ vg_name }}"
+      pvs: "{{ data_volume_dr }}"
+    when: result.stdout == '0'
+
+  - name: Check if LV present
+    shell: 'lvs | grep {{ lv_name }} | wc -l'
+    register: result
+    changed_when: false
+ 
+  - name: Create Logical Volume
+    lvol:
+      vg: "{{ vg_name }}"
+      lv: "{{ lv_name }}"
+      size: 100%FREE
+      state: present
+    when: result.stdout == '0'
+
+  - name: Create XFS file system
+    filesystem:
+      fstype: xfs
+      dev: '/dev/{{  vg_name }}/{{ lv_name }}'
+
+  - name: Create GFS2 mount directory
+    file:
+      path: "{{ gfs2_mount_point }}"
+      state: directory
+  
+  - name: Mount Data Volume
+    mount:
+      path: "{{ gfs2_mount_point }}"
+      src: '/dev/{{  vg_name }}/{{ lv_name }}'
+      state: mounted
+
+  - name: Create and entry in fstab
+    lineinfile:
+      path: /etc/fstab
+      line: '/dev/{{ vg_name }}/{{ lv_name }}	{{ gfs2_mount_point }}	xfs	defaults	0 0'
+      state: present
+
+  - name: Include Samba Vars
+    include_vars: vars/samba.yaml
+
+  - name: Samba Config
+    template:
+      src: templates/smb.conf.dr.j2
+      dest: /etc/samba/smb.conf
+
+  - name: krb5 Config
+    template:
+      src: templates/krb5.conf.j2
+      dest: /etc/krb5.conf
+
+  - name: Create Directories
+    file:
+      path: "{{ gfs2_mount_point }}/share/{{ item.path }}"
+      state: directory
+    with_items:
+      - "{{ samba_shares }}"
+
+  - name: Define ACLs
+    acl:
+      path: "{{ gfs2_mount_point }}/share/{{ item.0.path }}"
+      entry: "{{ item.1 }}"
+      state: present
+    with_subelements:
+      - "{{ samba_shares }}"
+      - acls

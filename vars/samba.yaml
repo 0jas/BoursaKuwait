@@ -1,8 +1,4 @@
 ---
 samba_shares:
-- name: Common
-  comment: SMB Share 
-  path: common
-  read_only: no
-  valid_users: shameed
-  inherit_acls: Yes
+- { name: Common, path: common, acls: [ "o::rwx" ] }
+

@@ -1,6 +1,6 @@
 ---
 - name: Create a samba CTDB cluster
-  hosts: samba_servers
+  hosts: samba_servers_main
   gather_facts: false
   vars_files:
     - vars/main.yaml
@@ -544,6 +544,23 @@
 
 #############################################################
 
+  - name: Create Directories
+    file:
+      path: "{{ gfs2_mount_point }}/share/{{ item.path }}"
+      state: directory
+    with_items:
+      - "{{ samba_shares }}"    
+
+  - name: Define ACLs
+    acl:
+      path: "{{ gfs2_mount_point }}/share/{{ item.0.path }}"
+      entry: "{{ item.1 }}"
+      state: present
+    with_subelements:
+      - "{{ samba_shares }}"
+      - acls
+
+    
   post_tasks:
   - name: Check Cluster Status
     command: 'pcs status'

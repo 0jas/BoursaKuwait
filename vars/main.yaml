@@ -34,6 +34,23 @@ packages:
   - sssd-winbind-idmap
   - quota
 
+packages_dr:
+  - cifs-utils
+  - samba
+  - samba-common
+  - samba-winbind
+  - samba-client
+  - krb5-workstation
+  - realmd
+  - oddjob
+  - oddjob-mkhomedir
+  - sssd
+  - adcli
+  - samba-winbind-clients
+  - chrony
+  - sssd-winbind-idmap
+  - quota
+
 tokens_file: '/var/lib/pcsd/tokens'
 corosync_conf: '/etc/corosync/corosync.conf'
 
@@ -44,9 +61,18 @@ disable_services:
   - winbind
   - sssd
 
+disable_services_dr:
+  - smb
+  - nmb
+  - winbind
+  - sssd
+
 firewall_ports:
   - high-availability
   - ctdb
+  - samba
+
+firewall_ports_dr:
   - samba
 
 cluster_user: 'hacluster'
@@ -66,6 +92,8 @@ nmb_name: nmb
 shared_volume: '/dev/mapper/mpatha'
 vg_name: 'vgclvm'
 lv_name: 'lvcluster'
+
+data_volume_dr: '/dev/mapper/dv'
 
 gfs2_mount_point: '/clusterfs'
 
