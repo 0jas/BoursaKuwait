@@ -1,0 +1,39 @@
+---
+- name: Create share directories, define ACLs and update Samba configuration.
+  hosts: samba_servers
+  gather_facts: false
+  vars_files:
+    - vars/main.yaml
+    - vars/samba.yaml
+
+  tasks:
+  - name: Create Directories
+    file:
+      path: "{{ gfs2_mount_point }}/share/{{ item.path }}"
+      state: directory
+      owner: root
+      group: root
+      mode: '0770'
+    with_items:
+      - "{{ samba_shares }}"
+
+  - name: Define ACLs
+    acl:
+      path: "{{ gfs2_mount_point }}/share/{{ item.0.path }}"
+      entry: "{{ item.1 }}"
+      state: present
+    with_subelements:
+      - "{{ samba_shares }}"
+      - acls
+
+  - name: Samba Config
+    template:
+      hosts: samba_servers_main
+      src: templates/smb.conf.j2
+      dest: /etc/samba/smb.conf
+
+  - name: Samba Config
+    template:
+      hosts: samba_servers_dr
+      src: templates/smb.conf.dr.j2
+      dest: /etc/samba/smb.conf

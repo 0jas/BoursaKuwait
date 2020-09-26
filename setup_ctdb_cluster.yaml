@@ -544,21 +544,21 @@
 
 #############################################################
 
-  - name: Create Directories
-    file:
-      path: "{{ gfs2_mount_point }}/share/{{ item.path }}"
-      state: directory
-    with_items:
-      - "{{ samba_shares }}"    
+#  - name: Create Directories
+#    file:
+#      path: "{{ gfs2_mount_point }}/share/{{ item.path }}"
+#      state: directory
+#    with_items:
+#      - "{{ samba_shares }}"    
 
-  - name: Define ACLs
-    acl:
-      path: "{{ gfs2_mount_point }}/share/{{ item.0.path }}"
-      entry: "{{ item.1 }}"
-      state: present
-    with_subelements:
-      - "{{ samba_shares }}"
-      - acls
+#  - name: Define ACLs
+#    acl:
+#      path: "{{ gfs2_mount_point }}/share/{{ item.0.path }}"
+#      entry: "{{ item.1 }}"
+#      state: present
+#    with_subelements:
+#      - "{{ samba_shares }}"
+#      - acls
 
     
   post_tasks:

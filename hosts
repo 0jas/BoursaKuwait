@@ -1,6 +1,10 @@
-[samba_serversi_main]
+[samba_servers_main]
 fs-ho-smb1
 fs-ho-smb2
 
 [samba_servers_dr]
-fs-ho-smb-dr
+fs-dr-smb1
+
+[samba_servers:children]
+samba_servers_main
+samba_servers_dr

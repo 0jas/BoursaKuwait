@@ -113,6 +113,13 @@
       line: '/dev/{{ vg_name }}/{{ lv_name }}	{{ gfs2_mount_point }}	xfs	defaults	0 0'
       state: present
 
+  - name: Create CTDB Directories
+    file:
+      path: "{{ gfs2_mount_point }}{{ item }}"
+      state: directory
+    with_items:
+      - "{{ ctdb_directories }}"
+
   - name: Include Samba Vars
     include_vars: vars/samba.yaml
 
@@ -126,18 +133,18 @@
       src: templates/krb5.conf.j2
       dest: /etc/krb5.conf
 
-  - name: Create Directories
-    file:
-      path: "{{ gfs2_mount_point }}/share/{{ item.path }}"
-      state: directory
-    with_items:
-      - "{{ samba_shares }}"
+#  - name: Create Directories
+#    file:
+#      path: "{{ gfs2_mount_point }}/share/{{ item.path }}"
+#      state: directory
+#    with_items:
+#      - "{{ samba_shares }}"
 
-  - name: Define ACLs
-    acl:
-      path: "{{ gfs2_mount_point }}/share/{{ item.0.path }}"
-      entry: "{{ item.1 }}"
-      state: present
-    with_subelements:
-      - "{{ samba_shares }}"
-      - acls
+#  - name: Define ACLs
+#    acl:
+#      path: "{{ gfs2_mount_point }}/share/{{ item.0.path }}"
+#      entry: "{{ item.1 }}"
+#      state: present
+#    with_subelements:
+#      - "{{ samba_shares }}"
+#      - acls

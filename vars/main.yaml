@@ -93,7 +93,7 @@ shared_volume: '/dev/mapper/mpatha'
 vg_name: 'vgclvm'
 lv_name: 'lvcluster'
 
-data_volume_dr: '/dev/mapper/dv'
+data_volume_dr: '/dev/mapper/mpatha'
 
 gfs2_mount_point: '/clusterfs'
 
