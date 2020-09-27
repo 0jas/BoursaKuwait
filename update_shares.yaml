@@ -31,8 +31,15 @@
       src: templates/smb.conf.j2
       dest: /etc/samba/smb.conf
 
-  - name: Samba Config
+
+- name: Update DR Samba configuration
+  hosts: samba_servers_dr
+  gather_facts: false
+  vars_files:
+    - vars/samba.yaml
+    - vars/main.yaml
+  tasks:
+  - name: Update Samba Config
     template:
-      hosts: samba_servers_dr
       src: templates/smb.conf.dr.j2
       dest: /etc/samba/smb.conf

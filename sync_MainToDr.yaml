@@ -1,7 +1,7 @@
 ---
 - name: Sync Pull task - Executed on  the Destination host "{{groups['samba_servers_dr'][0]}}"
   hosts: "{{groups['samba_servers_main'][1]}}"
-  user: root
+  gather_facts: False
   tasks:   
     - name: Pull data from Main site to DR site
       synchronize:
@@ -10,7 +10,7 @@
         mode: pull
         copy_links: yes
         recursive: yes
-      #  delete: yes
+        delete: yes
         group: yes
         links: yes
         owner: yes
@@ -23,4 +23,5 @@
       delegate_to: "{{groups['samba_servers_dr'][0]}}"
       run_once: true
       with_items:
-        - "{{ gfs2_mount_point }}"
+        - "/clusterfs/share"
+        - "/clusterfs/home"
