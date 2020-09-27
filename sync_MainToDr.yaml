@@ -6,9 +6,8 @@
     - name: Pull data from Main site to DR site
       synchronize:
         src: "{{ item }}"
-        dest: "{{ item }}"
+        dest: "/clusterfs"
         mode: pull
-        copy_links: yes
         recursive: yes
         delete: yes
         group: yes
