@@ -47,6 +47,10 @@
 
 {% for i in samba_shares %}
 [{{ i.name }}]
-        path = {{ gfs2_mount_point }}/share/{{ i.path }}	
+        path = {{ gfs2_mount_point }}/share/{{ i.path }}
   	read only = No
+{% if i.hidden %}
+	valid users = {{ i.valid_users }}
+	inherit acls = Yes
+{% endif %}	
 {% endfor %}

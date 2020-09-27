@@ -44,4 +44,8 @@
 [{{ i.name }}]
         path = {{ gfs2_mount_point }}/share/{{ i.path }}	
   	read only = No
+{% if i.hidden %}
+        valid users = {{ i.valid_users }}
+        inherit acls = Yes
+{% endif %}
 {% endfor %}
