@@ -1,5 +1,5 @@
 ---
 samba_shares:
-- { name: Common, path: common, mode: "1770", acls: [ "o::rwX" ] }
-- { name: SysAdmins, path: sysadmin, mode: "0770", acls: [ 'g:system admins:rwX' ] }
+- { name: "BK Common", path: bkcommon, mode: "1770", acls: [ "o::rwX" ] }
+- { name: SysAdmins, path: sysadmin, mode: "0770", acls: [ 'g:system admins:rwX', 'u:shaider:rwX' ] }
 - { name: "IT Office Management", path: itofficemgmt, mode: "0770", acls: [ 'u:shaider:rwX', 'u:csato:rwX' ] }
