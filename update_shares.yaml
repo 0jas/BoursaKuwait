@@ -25,6 +25,7 @@
     with_subelements:
       - "{{ samba_shares }}"
       - acls
+    when: not item.0.hidden
 
   - name: Samba Config
     template:

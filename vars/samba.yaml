@@ -1,5 +1,6 @@
 ---
 samba_shares:
+- { name: "Linux", path: linux, mode: "0777", acls: [ '' ],  hidden: True, valid_users: '@"system admins"' }
+- { name: "IT Office Management", path: itofficemgmt, mode: "0777", acls: [ '' ],  hidden: True, valid_users: 'shaider, csato' }
 - { name: "BK Common", path: bkcommon, mode: "1770", acls: [ "o::rwX" ], hidden: False, valid_users: '' }
 - { name: SysAdmins, path: sysadmin, mode: "0770", acls: [ 'g:system admins:rwX', 'u:shaider:rwX' ], hidden: False, valid_users: '' }
-- { name: "IT Office Management", path: itofficemgmt, mode: "0770", acls: [ 'u:shaider:rwX', 'u:csato:rwX' ],  hidden: False, valid_users: '' }
