@@ -1,8 +1,8 @@
 ---
 my_list: ""
 ntp_servers:
-  - 'server 10.1.8.6 iburst'
-  - 'server 10.2.8.6 iburst'
+  - 'server 10.10.8.6 iburst'
+  - 'server 10.20.8.6 iburst'
 
 ntp_servers_exclude: 'rhel'
 
@@ -112,10 +112,10 @@ ctdb_public_addresses:
 
 
 ad_domain: 'boursakuwait.com.kw'
-ad_user: shameed
+ad_user: sample
 realm: 'BOURSAKUWAIT.COM.KW'
 workgroup: 'BOURSAKUWAIT'
 
 ilo4_stonith_list:
-  - { ip: '10.250.27.178', host: 'samba01' }
-  - { ip: '10.250.27.220', host: 'samba02' }
+  - { ip: '10.200.1.1', host: 'samba01' }
+  - { ip: '10.200.1.10', host: 'samba02' }
